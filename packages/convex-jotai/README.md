@@ -1,178 +1,357 @@
 # convex-jotai
 
-A minimal bridge between [Convex](https://www.convex.dev/) and [Jotai](https://jotai.org/) that allows you to create atoms that automatically subscribe to Convex queries and stay in sync with server-side changes.
+A lightweight bridge between [Convex](https://www.convex.dev/) and [Jotai](https://jotai.org/) that lets you manage Convex queries, mutations, and actions through Jotai atoms.
 
 ## Installation
 
 ```bash
-npm install convex-jotai jotai convex
+npm install convex-jotai convex jotai
 # or
-bun add convex-jotai jotai convex
+yarn add convex-jotai convex jotai
+# or
+pnpm add convex-jotai convex jotai
+# or
+bun add convex-jotai convex jotai
 ```
 
-## Usage
+### Peer Dependencies
 
-### 1. Create the bridge
+| Package | Version |
+|---------|---------|
+| `convex` | `>=1.31` |
+| `jotai` | `>=2.6` |
 
-First, initialize the bridge with your Convex client:
+## Quick Start
+
+### 1. Set up the Convex client in your Jotai store
 
 ```typescript
-import { ConvexReactClient } from 'convex/react';
-import { createConvexJotai } from 'convex-jotai';
+import { ConvexClient } from 'convex/browser';
+import { createStore, Provider } from 'jotai';
+import { convexClientAtom } from 'convex-jotai';
 
-// Create your Convex client
-const convexClient = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL);
+// Create the Convex client
+const convex = new ConvexClient(import.meta.env.VITE_CONVEX_URL);
 
-// Create the Jotai-Convex bridge
-const { convexAtom } = createConvexJotai(convexClient);
+// Create a Jotai store and set the client
+const store = createStore();
+store.set(convexClientAtom, convex);
 
-export { convexAtom };
+// Wrap your app with the Jotai Provider
+function App() {
+  return (
+    <Provider store={store}>
+      <YourApp />
+    </Provider>
+  );
+}
 ```
 
-### 2. Create atoms for your queries
-
-Use `convexAtom` to create atoms that subscribe to Convex queries:
+### 2. Create atoms for queries, mutations, and actions
 
 ```typescript
+import { convexQueryAtom, convexMutationAtom, convexActionAtom } from 'convex-jotai';
 import { api } from '../convex/_generated/api';
-import { convexAtom } from './convex-jotai';
 
-// Create an atom that subscribes to a query
-export const messagesAtom = convexAtom(api.messages.list, { channel: 'general' });
+// Query atom - automatically subscribes to real-time updates
+const settingsAtom = convexQueryAtom(api.settings.get, () => ({ key: 'theme' }));
 
-// The atom returns a state object with status, data, and error
-// { status: 'loading', data: undefined, error: undefined }
-// { status: 'success', data: [...messages], error: undefined }
-// { status: 'error', data: undefined, error: Error }
+// Mutation atom - for modifying data
+const updateSettingsAtom = convexMutationAtom(api.settings.set);
+
+// Action atom - for running server-side actions
+const logActionAtom = convexActionAtom(api.actions.log);
 ```
 
 ### 3. Use atoms in your components
 
 ```typescript
-import { useAtomValue } from 'jotai';
-import { messagesAtom } from './atoms';
+import { useAtomValue, useSetAtom } from 'jotai';
 
-function Messages() {
-  const messages = useAtomValue(messagesAtom);
-
-  if (messages.status === 'loading') {
-    return <div>Loading...</div>;
-  }
-
-  if (messages.status === 'error') {
-    return <div>Error: {messages.error.message}</div>;
-  }
+function Settings() {
+  const settings = useAtomValue(settingsAtom);
+  const updateSettings = useSetAtom(updateSettingsAtom);
+  const runLog = useSetAtom(logActionAtom);
 
   return (
-    <ul>
-      {messages.data.map((msg) => (
-        <li key={msg._id}>{msg.text}</li>
-      ))}
-    </ul>
+    <div>
+      <p>Current value: {settings ?? 'Loading...'}</p>
+      <button onClick={() => updateSettings({ key: 'theme', value: 'dark' })}>
+        Set Dark Theme
+      </button>
+      <button onClick={() => runLog({ message: 'Settings viewed' })}>
+        Log View
+      </button>
+    </div>
   );
 }
 ```
 
-### Static skip
+---
 
-You can skip a query by passing `'skip'` instead of arguments:
+## Convex/React vs Convex-Jotai
 
-```typescript
-// This query won't execute
-const userAtom = convexAtom(api.users.get, 'skip');
+Here's a side-by-side comparison of setting up Convex with the official `convex/react` bindings versus `convex-jotai`:
+
+### Provider Setup
+
+**convex/react:**
+
+```tsx
+import { ConvexProvider, ConvexReactClient } from 'convex/react';
+
+const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL);
+
+function App() {
+  return (
+    <ConvexProvider client={convex}>
+      <YourApp />
+    </ConvexProvider>
+  );
+}
 ```
 
-### Reactive args (recommended)
+**convex-jotai:**
 
-For dynamic queries that depend on other atoms or need conditional skipping, pass a getter function:
+```tsx
+import { ConvexClient } from 'convex/browser';
+import { createStore, Provider } from 'jotai';
+import { convexClientAtom } from 'convex-jotai';
 
-```typescript
-import { atom } from 'jotai';
+const convex = new ConvexClient(import.meta.env.VITE_CONVEX_URL);
+const store = createStore();
+store.set(convexClientAtom, convex);
+
+function App() {
+  return (
+    <Provider store={store}>
+      <YourApp />
+    </Provider>
+  );
+}
+```
+
+### Queries
+
+**convex/react:**
+
+```tsx
+import { useQuery } from 'convex/react';
 import { api } from '../convex/_generated/api';
-import { convexAtom } from './convex-jotai';
 
-// Some state that controls the query
-const userIdAtom = atom<string | null>(null);
-
-// Reactive query - re-evaluates when userIdAtom changes
-const userProfileAtom = convexAtom(api.users.getProfile, (get) => {
-  const userId = get(userIdAtom);
-  return userId ? { id: userId } : 'skip';
-});
+function Component() {
+  const value = useQuery(api.settings.get, { key: 'demo' });
+  return <div>{value ?? 'Loading...'}</div>;
+}
 ```
 
-When the getter function's dependencies change:
+**convex-jotai:**
 
-- The args are re-evaluated
-- If the resulting query hash changes, the old subscription is cleaned up
-- A new subscription is started for the new query
-- Skip/unskip transitions are handled automatically
+```tsx
+import { useAtomValue } from 'jotai';
+import { convexQueryAtom } from 'convex-jotai';
+import { api } from '../convex/_generated/api';
 
-#### More reactive examples
+// Define atom outside component
+const valueAtom = convexQueryAtom(api.settings.get, () => ({ key: 'demo' }));
+
+function Component() {
+  const value = useAtomValue(valueAtom);
+  return <div>{value ?? 'Loading...'}</div>;
+}
+```
+
+### Mutations
+
+**convex/react:**
+
+```tsx
+import { useMutation } from 'convex/react';
+import { api } from '../convex/_generated/api';
+
+function Component() {
+  const setValue = useMutation(api.settings.set);
+  
+  const handleClick = async () => {
+    await setValue({ key: 'demo', value: 'new-value' });
+  };
+  
+  return <button onClick={handleClick}>Update</button>;
+}
+```
+
+**convex-jotai:**
+
+```tsx
+import { useSetAtom } from 'jotai';
+import { convexMutationAtom } from 'convex-jotai';
+import { api } from '../convex/_generated/api';
+
+// Define atom outside component
+const setValueAtom = convexMutationAtom(api.settings.set);
+
+function Component() {
+  const setValue = useSetAtom(setValueAtom);
+  
+  const handleClick = async () => {
+    await setValue({ key: 'demo', value: 'new-value' });
+  };
+  
+  return <button onClick={handleClick}>Update</button>;
+}
+```
+
+### Actions
+
+**convex/react:**
+
+```tsx
+import { useAction } from 'convex/react';
+import { api } from '../convex/_generated/api';
+
+function Component() {
+  const runAction = useAction(api.actions.doSomething);
+  
+  return <button onClick={() => runAction({ param: 'value' })}>Run</button>;
+}
+```
+
+**convex-jotai:**
+
+```tsx
+import { useSetAtom } from 'jotai';
+import { convexActionAtom } from 'convex-jotai';
+import { api } from '../convex/_generated/api';
+
+// Define atom outside component
+const runActionAtom = convexActionAtom(api.actions.doSomething);
+
+function Component() {
+  const runAction = useSetAtom(runActionAtom);
+  
+  return <button onClick={() => runAction({ param: 'value' })}>Run</button>;
+}
+```
+
+### Key Differences
+
+| Feature | convex/react | convex-jotai |
+|---------|--------------|--------------|
+| **Client type** | `ConvexReactClient` | `ConvexClient` (browser) |
+| **Provider** | `<ConvexProvider>` | `<Provider store={...}>` (Jotai) |
+| **Query definition** | Inside component via hooks | Outside component as atoms |
+| **State management** | Built-in React hooks | Jotai atom primitives |
+| **Reactive args** | Re-renders on arg change | Getter function `(get) => args` |
+| **Cross-component state** | Requires lifting state | Atoms are naturally shared |
+| **DevTools** | Convex dashboard | Jotai DevTools + Convex dashboard |
+
+### When to Use convex-jotai
+
+✅ **Use convex-jotai when:**
+
+- You're already using Jotai for state management
+- You want to compose Convex queries with other Jotai atoms
+- You need fine-grained control over subscriptions
+- You prefer defining data dependencies outside components
+- You want to share query results across components without prop drilling
+
+✅ **Use convex/react when:**
+
+- You're not using Jotai in your project
+- You prefer colocating data fetching with components
+- You want the simplest possible setup
+
+---
+
+## API Reference
+
+### `convexClientAtom`
+
+An atom that holds the Convex client instance. Must be set before using other atoms.
 
 ```typescript
-// Dependent queries - wait for first query before running second
-const channelAtom = convexAtom(api.channels.getCurrent, {});
-const messagesAtom = convexAtom(api.messages.list, (get) => {
-  const channel = get(channelAtom);
-  return channel.status === 'success' ? { channelId: channel.data._id } : 'skip';
-});
+import { convexClientAtom } from 'convex-jotai';
 
-// Feature flag - only fetch when panel is open
-const isPanelOpenAtom = atom(false);
-const analyticsAtom = convexAtom(api.analytics.dashboard, (get) => {
-  return get(isPanelOpenAtom) ? {} : 'skip';
-});
+store.set(convexClientAtom, convexClient);
+```
 
-// Search with debounced input
-const searchQueryAtom = atom('');
-const searchResultsAtom = convexAtom(api.search.query, (get) => {
-  const query = get(searchQueryAtom);
-  return query.length >= 3 ? { query } : 'skip';
+### `convexQueryAtom(query, argsGetter)`
+
+Creates an atom that subscribes to a Convex query with real-time updates.
+
+**Parameters:**
+
+- `query` — A Convex query function reference (e.g., `api.settings.get`)
+- `argsGetter` — A function `(get) => args` that returns the query arguments
+
+**Returns:** A read-only atom containing the query result (or `undefined` while loading)
+
+```typescript
+const userAtom = convexQueryAtom(api.users.get, () => ({ id: 'user-123' }));
+
+// Reactive example - depends on another atom
+const selectedIdAtom = atom<string | null>(null);
+const selectedUserAtom = convexQueryAtom(api.users.get, (get) => {
+  const id = get(selectedIdAtom);
+  return { id: id ?? '' };
 });
 ```
 
-## API
+### `convexQueryResultAtom(query, argsGetter)`
 
-### `createConvexJotai(convexClient)`
+Like `convexQueryAtom`, but returns the full result object with status.
 
-Creates a Jotai-Convex bridge instance.
+**Returns:** An atom with type:
 
-**Parameters:**
+```typescript
+type ConvexQueryResult<T> =
+  | { status: 'loading'; data?: undefined; error?: undefined }
+  | { status: 'success'; data: T; error?: undefined }
+  | { status: 'error'; data?: undefined; error: Error };
+```
 
-- `convexClient` - A `ConvexReactClient` instance
+### `convexMutationAtom(mutation, optimisticUpdate?)`
 
-**Returns:**
-
-- An object containing:
-  - `convexAtom` - Factory function to create query atoms
-
-### `convexAtom(funcRef, args)`
-
-Creates an atom that subscribes to a Convex query.
+Creates a writable atom for executing Convex mutations.
 
 **Parameters:**
 
-- `funcRef` - A Convex function reference (e.g., `api.messages.list`)
-- `args` - One of:
-  - Query arguments object (static)
-  - `'skip'` to disable the query (static)
-  - `(get) => args | 'skip'` - A getter function for reactive args
+- `mutation` — A Convex mutation function reference
+- `optimisticUpdate` — Optional optimistic update function
 
-**Returns:**
+**Returns:** A writable atom where `useSetAtom` returns a function to execute the mutation
 
-- A Jotai atom with type `ConvexAtomState<T>`:
-  - `{ status: 'loading', data: undefined, error: undefined }` - Query is loading or skipped
-  - `{ status: 'success', data: T, error: undefined }` - Query succeeded
-  - `{ status: 'error', data: undefined, error: Error }` - Query failed
+```typescript
+const updateUserAtom = convexMutationAtom(api.users.update);
 
-## How it works
+// In component:
+const updateUser = useSetAtom(updateUserAtom);
+await updateUser({ id: 'user-123', name: 'New Name' });
+```
 
-The bridge uses Convex's `watchQuery` API to subscribe to query updates. When a query result changes on the server, the corresponding atom automatically updates, triggering re-renders in any components that use it.
+### `convexActionAtom(action)`
 
-**Subscription sharing:** Multiple atoms watching the same query (same function + arguments) share a single subscription to Convex, optimizing network usage.
+Creates a writable atom for executing Convex actions.
 
-**Reactive args:** When using a getter function for args, the atom re-evaluates the args on each read. If the computed query hash changes, the old subscription is cleaned up and a new one is started automatically.
+**Parameters:**
+
+- `action` — A Convex action function reference
+
+**Returns:** A writable atom where `useSetAtom` returns a function to execute the action
+
+```typescript
+const sendEmailAtom = convexActionAtom(api.actions.sendEmail);
+
+// In component:
+const sendEmail = useSetAtom(sendEmailAtom);
+await sendEmail({ to: 'user@example.com', subject: 'Hello' });
+```
+
+---
+
+## Example
+
+See the [playground app](../../apps/playground/README.md) for a complete working example comparing `convex/react` and `convex-jotai` side-by-side.
 
 ## License
 

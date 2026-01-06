@@ -1,62 +1,41 @@
-# convex-jotai monorepo
+# convex-jotai
 
-This workspace contains:
+A lightweight bridge between [Convex](https://www.convex.dev/) and [Jotai](https://jotai.org/).
 
-- `packages/convex-jotai`: a publishable bridge between Convex queries and Jotai atoms
-- `apps/playground`: a TanStack Start powered playground for exercising the library
+## Packages
 
-Everything is written in TypeScript and driven through Turborepo.
+| Package | Description |
+|---------|-------------|
+| [**convex-jotai**](./packages/convex-jotai/README.md) | The publishable library — Jotai atoms for Convex queries, mutations, and actions |
+| [**playground**](./apps/playground/README.md) | Example React app demonstrating convex-jotai usage |
 
-## Getting started
+## Quick Start
 
 ```bash
+npm install convex-jotai convex jotai
+```
+
+See the [convex-jotai documentation](./packages/convex-jotai/README.md) for full usage instructions and API reference.
+
+## Development
+
+This is a Turborepo monorepo. To get started:
+
+```bash
+# Install dependencies
 bun install
-```
 
-`bun install` boots the workspace, but you can also use `npm`, `yarn`, or `pnpm` if you prefer.
-
-To bootstrap everything for local work you can rely on Turborepo:
-
-```bash
+# Start development (all packages)
 bun run dev
+
+# Build all packages
+bun run build
+
+# Run specific package
+bun run dev --filter=playground
+bun run build --filter=convex-jotai
 ```
 
-That command starts the `playground` app with `start dev` while also running any other development tasks in a single workspace. Use filters to scope your work:
+## License
 
-```bash
-bun run dev -- --filter=playground
-```
-
-## Working with the library
-
-convex-jotai is published to npm and ships with an async helper that wraps `ConvexClient` calls in a Jotai atom.
-
-```ts
-import { ConvexClient } from 'convex';
-import { convexQueryAtom } from 'convex-jotai';
-
-const client = new ConvexClient({ url: 'https://your-app.convex.cloud' });
-const todosAtom = convexQueryAtom(client, 'listTodos');
-```
-
-Run a build for just the package with:
-
-```bash
-bun run build -- --filter=convex-jotai
-```
-
-## Exploring the playground
-
-`apps/playground` now runs on Vite and demonstrates the atoms and mock Convex client inside a minimal TanStack Router tree. The layout keeps the Suspense-enabled message panel in sync with the router so you can confirm `convex-jotai` wiring without a backend.
-
-You can publish the UI locally with:
-
-```bash
-bun run dev -- --filter=playground
-```
-
-and build it with:
-
-```bash
-bun run build -- --filter=playground
-```
+MIT
