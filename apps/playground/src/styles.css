@@ -1,0 +1,40 @@
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: radial-gradient(circle at top, #f0f3ff, #fdfaf8);
+  min-height: 100vh;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.panel {
+  max-width: 480px;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 1rem 2rem rgba(15, 23, 42, 0.15);
+}
+
+.panel h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+}
+
+.panel p {
+  margin-top: 1rem;
+}
+
+.result {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background: #f4f7ff;
+  font-weight: 600;
+}

@@ -1,0 +1,26 @@
+{
+  "name": "playground",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "convex:dev": "convex dev --url http://127.0.0.1:3210",
+    "convex:stop": "pkill -f \"convex dev\""
+  },
+  "dependencies": {
+    "@tanstack/react-router": "1.145.7",
+    "convex": "1.31.2",
+    "jotai": "2.16.1",
+    "convex-jotai": "workspace:*",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@tanstack/router-plugin": "1.145.7",
+    "@vitejs/plugin-react": "5.1.2",
+    "typescript": "5.9.3",
+    "vite": "7.3.0"
+  }
+}
