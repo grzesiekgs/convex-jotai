@@ -1,6 +1,6 @@
 {
   "name": "convex-jotai",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "license": "MIT",
   "private": false,
   "type": "module",
@@ -16,12 +16,12 @@
   "author": "Grzegorz Dunin-Ślęczek <grzesiekgs@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/grzesiekgs/jotai-convex.git",
+    "url": "git+https://github.com/grzesiekgs/convex-jotai.git",
     "directory": "packages/convex-jotai"
   },
-  "homepage": "https://github.com/grzesiekgs/jotai-convex#readme",
+  "homepage": "https://github.com/grzesiekgs/convex-jotai#readme",
   "bugs": {
-    "url": "https://github.com/grzesiekgs/jotai-convex/issues"
+    "url": "https://github.com/grzesiekgs/convex-jotai/issues"
   },
   "files": [
     "dist",
