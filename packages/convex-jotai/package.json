@@ -1,24 +1,56 @@
 {
   "name": "convex-jotai",
-  "version": "0.1.0",
+  "version": "0.1.0-alpha.0",
   "license": "MIT",
   "private": false,
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
+  "sideEffects": false,
+  "description": "Jotai atoms for Convex queries, mutations, and actions",
+  "keywords": [
+    "jotai",
+    "convex",
+    "react",
+    "state-management",
+    "realtime"
+  ],
+  "author": "Grzegorz Dunin-Ślęczek <grzesiekgs@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/grzesiekgs/jotai-convex.git",
+    "directory": "packages/convex-jotai"
+  },
+  "homepage": "https://github.com/grzesiekgs/jotai-convex#readme",
+  "bugs": {
+    "url": "https://github.com/grzesiekgs/jotai-convex/issues"
+  },
   "files": [
     "dist",
-    "LICENSE"
+    "LICENSE",
+    "README.md"
   ],
+  "main": "dist/index.mjs",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    }
+  },
   "scripts": {
-    "build": "tsc --build",
-    "tsc": "tsc --build --noEmit"
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "tsc": "tsc --noEmit"
   },
   "peerDependencies": {
     "convex": ">=1.31",
     "jotai": ">=2.6"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
+    "tsdown": "0.18.4",
     "typescript": "5.9.3"
   }
 }

@@ -7,7 +7,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "convex:dev": "convex dev --url http://127.0.0.1:3210",
-    "convex:stop": "pkill -f \"convex dev\""
+    "tsc": "tsc --noEmit"
   },
   "dependencies": {
     "@tanstack/react-router": "1.145.7",

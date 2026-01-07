@@ -99,10 +99,13 @@ const Settings: FC = () => {
   );
 }
 ```
+# Deep dive
+More details about the implementation.
+
 ## More features
+Find out what else `convex-jotai` can do.
 
 ### Dynamic query arguments
-
 ```tsx
 const dynamicSettingsQueryAtom = convexQueryAtom(api.settings.get, (get) => {
   const userSelectedKey = get(userSelectedKeyAtom);
@@ -113,7 +116,7 @@ const dynamicSettingsQueryAtom = convexQueryAtom(api.settings.get, (get) => {
 
 ### Support for suspense
 ```tsx
-const themeQuerySuspenseAtom = convexQuerySuspenseAtom(api.settings.get, () => ({ key: 'theme' }));
+const themeQueryPromiseAtom = convexQueryPromiseAtom(api.settings.get, () => ({ key: 'theme' }));
 ```
 
 ### Descriptive query result
@@ -137,9 +140,9 @@ if (themeQueryResult.status === 'error') {
 }
 ```
 
-# `convex/react` vs `convex-jotai`
+## `convex/react` vs `convex-jotai`
 
-## Provider Setup
+### Provider Setup
 ```tsx
 // convex/react
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
@@ -173,7 +176,7 @@ const App: FC = () => {
 ```
 
 
-## Queries, mutations and actions
+### Queries, mutations and actions
 
 ```tsx
 // convex/react
