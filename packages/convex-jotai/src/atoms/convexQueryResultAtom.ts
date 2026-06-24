@@ -1,5 +1,5 @@
 import type { Atom } from 'jotai';
-import type { ConvexQueryOptionsGetter, ConvexQueryResult } from '../types';
+import type { ConvexQueryOptionsArgs, ConvexQueryResult } from '../types';
 import { FunctionArgs, FunctionReference, FunctionReturnType } from 'convex/server';
 import { atom } from 'jotai';
 import { getLocalConvexQueryResult, assertConvexClient } from '../utils';
@@ -7,15 +7,15 @@ import { convexClientAtom } from './convexClientAtom';
 
 export function convexQueryResultAtom<Query extends FunctionReference<'query'>>(
   query: Query,
-  queryOptionsGetter: ConvexQueryOptionsGetter<Query>
+  ...[queryOptionsGetter]: ConvexQueryOptionsArgs<Query>
 ): Atom<ConvexQueryResult<FunctionReturnType<Query>>> {
   type QueryResultType = ConvexQueryResult<FunctionReturnType<Query>>;
-  const queryOptionsAtom = atom<FunctionArgs<Query>>((get) => queryOptionsGetter(get));
+  const queryOptionsAtom = atom<FunctionArgs<Query>>((get) => queryOptionsGetter?.(get) ?? {});
   const querySubscriptionAtom = atom((get) => {
     const convexClient = assertConvexClient(get(convexClientAtom));
     const queryOptions = get(queryOptionsAtom);
     const queryResultAtom = atom<QueryResultType>(
-      getLocalConvexQueryResult(convexClient, query, queryOptions)
+      getLocalConvexQueryResult(convexClient, query, queryOptions),
     );
     queryResultAtom.onMount = (setValue) => {
       // // Is there a point to call it there?
@@ -32,7 +32,7 @@ export function convexQueryResultAtom<Query extends FunctionReference<'query'>>(
           setValue({
             status: 'error',
             error,
-          })
+          }),
       );
     };
 

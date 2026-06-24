@@ -1,14 +1,14 @@
 import type { Atom } from 'jotai';
 import type { FunctionReference, FunctionReturnType } from 'convex/server';
 import { atom } from 'jotai';
-import { ConvexQueryOptionsGetter } from '../types';
+import { ConvexQueryOptionsArgs } from '../types';
 import { convexQueryResultAtom } from './convexQueryResultAtom';
 
 export function convexQueryAtom<Query extends FunctionReference<'query'>>(
   query: Query,
-  queryOptionsGetter: ConvexQueryOptionsGetter<Query>
+  ...args: ConvexQueryOptionsArgs<Query>
 ): Atom<FunctionReturnType<Query>> {
-  const queryResultAtom = convexQueryResultAtom(query, queryOptionsGetter);
+  const queryResultAtom = convexQueryResultAtom(query, ...args);
 
   return atom<FunctionReturnType<Query>>((get) => {
     const queryResult = get(queryResultAtom);

@@ -5,6 +5,11 @@ export type ConvexQueryOptionsGetter<Query extends FunctionReference<'query'>> =
   get: Getter
 ) => FunctionArgs<Query>;
 
+export type ConvexQueryOptionsArgs<Query extends FunctionReference<'query'>> =
+  FunctionArgs<Query> extends Record<string, never>
+    ? [queryOptionsGetter?: ConvexQueryOptionsGetter<Query>]
+    : [queryOptionsGetter: ConvexQueryOptionsGetter<Query>];
+
 export type ConvexQueryErrorResult = { status: 'error'; data?: never; error: Error };
 export type ConvexQueryLoadingResult = { status: 'loading'; data?: never; error?: never };
 export type ConvexQuerySuccessResult<T> = { status: 'success'; data: T; error?: never };

@@ -2,14 +2,14 @@ import type { Atom } from 'jotai';
 import type { FunctionReference, FunctionReturnType } from 'convex/server';
 import { atom } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { ConvexQueryOptionsGetter, ConvexQueryResult } from '../types';
+import { ConvexQueryOptionsArgs, ConvexQueryResult } from '../types';
 import { convexQueryResultAtom } from './convexQueryResultAtom';
 
 export function convexQueryPromiseAtom<Query extends FunctionReference<'query'>>(
   query: Query,
-  queryOptionsGetter: ConvexQueryOptionsGetter<Query>
+  ...args: ConvexQueryOptionsArgs<Query>
 ): Atom<Promise<FunctionReturnType<Query>>> {
-  const queryResultAtom = convexQueryResultAtom(query, queryOptionsGetter);
+  const queryResultAtom = convexQueryResultAtom(query, ...args);
   const queryPromiseStateAtom = selectAtom<
     ConvexQueryResult<FunctionReturnType<Query>>,
     { promiseWithResolvers: PromiseWithResolvers<FunctionReturnType<Query>>; resolved: boolean }
@@ -35,6 +35,6 @@ export function convexQueryPromiseAtom<Query extends FunctionReference<'query'>>
   });
 
   return atom<Promise<FunctionReturnType<Query>>>(
-    (get) => get(queryPromiseStateAtom).promiseWithResolvers.promise
+    (get) => get(queryPromiseStateAtom).promiseWithResolvers.promise,
   );
 }
